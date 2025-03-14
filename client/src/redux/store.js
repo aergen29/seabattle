@@ -1,8 +1,10 @@
 import {configureStore} from '@reduxjs/toolkit';
 import informationsSlice from './slices/informationsSlice';
+import locationSlice from './slices/locationSlice';
 
 export default configureStore({
   reducer:{
-    informations:informationsSlice
+    informations:informationsSlice,
+    locations:locationSlice
   }
 });

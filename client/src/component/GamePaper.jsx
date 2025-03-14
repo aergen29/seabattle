@@ -1,6 +1,9 @@
 import { alpha, Paper, useMediaQuery, useTheme } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { add, remove } from "../redux/slices/locationSlice";
+import { isLocationSuit } from "../helper/valueControls";
 
 const GamePaper = () => {
   const them = useTheme();
@@ -35,9 +38,24 @@ const DraggableElement = ({
   const [inArea, setInArea] = useState(false);
   const [isHorizontal, setIsHorizontal] = useState(true);
   const isSmall = useMediaQuery(theme.breakpoints.down("md"));
-  useEffect(()=>{
+  const dispatch = useDispatch();
+  const state = useSelector((e) => e.locations);
+  const [warn, setWarn] = useState(false);
+  const [animateLocation, setAnimateLocation] = useState({ x: 0, y: 0 });
+  useEffect(() => {
     setStartPointGlobal(isHorizontal);
-  },[isSmall])
+  }, [isSmall]);
+
+  useEffect(() => {
+    setAnimateLocation({ x: 29, y: 29 });
+    setTimeout(
+      () =>
+        setAnimateLocation(
+          inArea ? { x: gridPos.x, y: gridPos.y } : startPoint
+        ),
+      6
+    );
+  }, [gridPos, inArea, startPoint]);
 
   const isInArea = (x, y) => {
     return !(
@@ -52,20 +70,31 @@ const DraggableElement = ({
     // Elemanın sol üst köşesinin en yakın grid noktasına kilitlenmesi için hesaplama
     //console.log(gridPos.x+info.offset.x , gridPos.y+info.offset.y )
     // console.log(Math.round((gridPos.x+info.offset.x)/ TILE_SIZE) * TILE_SIZE, Math.round((gridPos.y+info.offset.y)/ TILE_SIZE) * TILE_SIZE)
+    // if (warn) {
+    //   console.log("here");
+    //   setShadow({ ...shadow, isActive: false, length: elementLength });
+    //   dispatch(remove(index));
+    //   setTimeout(() => {
+    //     setGridPos({ x: 0, y: 0 });
+    //     setInArea(false);
+    //   }, 20);
+    //   return;
+    // }
     if (!inArea) {
       info.offset.x = info.offset.x + startPoint.x;
       info.offset.y = info.offset.y + startPoint.y;
     }
-    setGridPos({ x: info.offset.x, y: info.offset.y });
+    // setGridPos({ x: info.offset.x, y: info.offset.y });
     let newX = gridPos.x + Math.round(info.offset.x / TILE_SIZE) * TILE_SIZE;
     let newY = gridPos.y + Math.round(info.offset.y / TILE_SIZE) * TILE_SIZE;
 
-    console.log(newX, newY);
-    if (!isInArea(newX, newY)) {
+    if (!isInArea(newX, newY) || warn) {
+      console.log("here");
       newX = 0;
       newY = 0;
       setShadow({ ...shadow, isActive: false, length: elementLength });
       setInArea(false);
+      dispatch(remove(index));
     } else {
       // Grid sınırlarının dışına çıkmasını engelle (Min-Max ile kısıtlama)
       newX = isHorizontal
@@ -83,13 +112,20 @@ const DraggableElement = ({
         length: elementLength,
       });
       setInArea(true);
+      dispatch(
+        add({ index, isHorizontal, length: elementLength, location: { x, y } })
+      );
     }
-    console.log(info.offset.x, newX, info.offset.y, newY, isInArea(newX, newY));
+    // console.log(info.offset.x, newX, info.offset.y, newY, isInArea(newX, newY));
     // Yeni pozisyonu ayarla
     setTimeout(() => setGridPos({ x: newX, y: newY }), 5);
+
     // setGridPos({ x: newX, y: newY });
   };
 
+  const handleDragStart = (event, info) => {
+    dispatch(remove(index));
+  };
   const handleDrag = (event, info) => {
     if (!inArea) {
       info.offset.x = info.offset.x + startPoint.x;
@@ -105,6 +141,12 @@ const DraggableElement = ({
       : Math.max(0, Math.min((GRID_SIZE - elementLength) * TILE_SIZE, newY));
     let x = newX / TILE_SIZE;
     let y = newY / TILE_SIZE;
+    let warn = !isLocationSuit(
+      state.filled,
+      { isHorizontal, length: elementLength, location: { x, y } },
+      GRID_SIZE
+    );
+    setWarn(warn);
     if (isInArea(newX, newY))
       setShadow({
         ...shadow,
@@ -112,6 +154,7 @@ const DraggableElement = ({
         start: y * GRID_SIZE + x,
         length: elementLength,
         isHorizontal,
+        warn,
       });
     else
       setShadow({
@@ -119,6 +162,7 @@ const DraggableElement = ({
         isActive: false,
         length: elementLength,
         isHorizontal,
+        warn,
       });
   };
 
@@ -133,7 +177,7 @@ const DraggableElement = ({
             }
         : horizant
         ? {
-            y: TILE_SIZE * -1.1 * (index+1),
+            y: TILE_SIZE * -1.1 * (index + 1),
             x: 0,
           }
         : {
@@ -145,6 +189,37 @@ const DraggableElement = ({
 
   const doubleClickHandle = (e) => {
     setStartPointGlobal(!isHorizontal);
+    if (inArea) {
+      dispatch(remove(index));
+      let warn = !isLocationSuit(
+        state.filled,
+        {
+          isHorizontal: !isHorizontal,
+          length: elementLength,
+          location: {
+            x: isHorizontal
+              ? gridPos.x / TILE_SIZE
+              : gridPos.x / TILE_SIZE + 1,
+            y: isHorizontal
+              ? gridPos.y / TILE_SIZE + 1
+              : gridPos.y / TILE_SIZE,
+          },
+        },
+        GRID_SIZE
+      );
+      setWarn(warn);
+      setInArea(!warn);
+      if (!warn)
+        dispatch(
+          add({
+            index,
+            isHorizontal: !isHorizontal,
+            length: elementLength,
+            location: { x: gridPos.x / TILE_SIZE, y: gridPos.y / TILE_SIZE },
+          })
+        );
+      else setGridPos({x:0,y:0});
+    }
     setIsHorizontal(!isHorizontal);
     setShadow({
       ...shadow,
@@ -159,10 +234,11 @@ const DraggableElement = ({
     <motion.div
       onDoubleClick={doubleClickHandle}
       drag
+      onDragStart={handleDragStart}
       onDrag={handleDrag}
       dragMomentum={false} // Sürükleme bırakıldığında kaymayı önler
       onDragEnd={handleDragEnd} // Bırakıldığında grid'e hizala
-      animate={inArea ? { x: gridPos.x, y: gridPos.y } : startPoint}
+      animate={animateLocation}
       transition={{ type: "spring", stiffness: 900, damping: 50 }}
       style={{
         width: isHorizontal ? elementLength * TILE_SIZE : TILE_SIZE,
@@ -185,6 +261,7 @@ const Arena = () => {
     start: 0,
     length: 3,
     isHorizontal: true,
+    warn: false,
   });
   const ships = [
     { index: 0, length: 5 },
@@ -220,12 +297,16 @@ const Arena = () => {
                 ? shadow.isHorizontal
                   ? shadow.start + shadow.length - 1 >= index &&
                     shadow.start <= index
-                    ? "gray"
+                    ? shadow.warn
+                      ? "darkred"
+                      : "gray"
                     : "white"
                   : [...Array(shadow.length)]
                       .map((_, i) => shadow.start + i * GRID_SIZE)
                       .indexOf(index) !== -1
-                  ? "gray"
+                  ? shadow.warn
+                    ? "darkred"
+                    : "gray"
                   : "white"
                 : "white",
 
