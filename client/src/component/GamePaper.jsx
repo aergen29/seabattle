@@ -1,13 +1,71 @@
-import { alpha, Paper, useMediaQuery, useTheme } from "@mui/material";
+import {
+  alpha,
+  Button,
+  Paper,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { add, remove } from "../redux/slices/locationSlice";
 import { isLocationSuit } from "../helper/valueControls";
+import socket from "../helper/socket";
+import { set } from "../redux/slices/gameSlice";
+import alertify from 'alertifyjs';
 
 const GamePaper = () => {
   const them = useTheme();
   const theme = them.palette;
+  const state = useSelector((e) => e.locations);
+  const [isReady, setIsReady] = useState(false);
+  const gameState = useSelector((e) => e.game);
+  const dispatch = useDispatch();
+  const [isGameStarted, seItsGameStarted] = useState(false);
+  const [color, setColor] = useState(false);
+  const [opponentReady, setOpponentReady] = useState(0);
+  const locationState = useSelector(e=>e.locations);
+
+
+  useEffect(() => {
+    setColor(opponentReady === 2 || (opponentReady === 1 && !isReady));
+    if(opponentReady == 2) seItsGameStarted(true);
+  }, [opponentReady,isGameStarted,isReady]);
+
+  useEffect(() => {
+    const userExit = ({ username }) => {
+      dispatch(set({ name: "opponent", value: "" }));
+      setOpponentReady(opponentReady === 2 ? 1 : color ? 0 : 1);
+    };
+    const readyControl = (e) => {
+      setOpponentReady(e);
+    };
+    socket.on("userExit", userExit);
+    socket.on("readyControl", readyControl);
+    socket.emit("ready", { roomLink: gameState.room, status: false });
+    return () => {
+      socket.off("userExit", userExit);
+      socket.off("readyControl", readyControl);
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    if (!state.isReady) setIsReady(false);
+  }, [state.isReady]);
+
+  const readyHandle = (e) => {
+    setIsReady(!isReady);
+    socket.emit(
+      "ready",
+      { roomLink: gameState.room, status: !isReady, shipLocations:locationState.filled },
+      (e) => {
+        seItsGameStarted(e);
+      }
+    );
+  };
+
   return (
     <Paper
       sx={{
@@ -17,10 +75,42 @@ const GamePaper = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        flexDirection: "column",
       }}
     >
-      <Arena />
-      {/* <Grid2 container sx={{ width: "100%" }}></Grid2> */}
+      <Typography
+        variant="subtitle"
+        color={color ? "success" : "primary"}
+        sx={{ textAlign: "right", fontSize: "1.5em" }}
+        width={{ xs: "100%", md: "80%" }}
+      >
+        {gameState.opponent ? gameState.opponent : ""}
+      </Typography>
+      <Typography
+        variant="subtitle"
+        sx={{ textAlign: "right", fontSize: "1.2em", cursor:"pointer" }}
+        width={{ xs: "100%", md: "80%" }}
+        onClick={e=>{
+          alertify.success('Davet linki kopyalandı.');
+          navigator.clipboard.writeText("localhost:3000/"+gameState.room);
+        }}
+      >
+        {gameState.opponent ? "" : "Davet Linkini Kopyala"}        
+      </Typography>
+
+      <Arena gameState={gameState} isUserReady={isReady} />
+      <Button
+        onClick={readyHandle}
+        color="secondary"
+        sx={{
+          width: "50%",
+          visibility: state.isReady ? "inherit" : "hidden",
+          mt: 4,
+        }}
+        variant={!isReady ? "outlined" : "contained"}
+      >
+        Hazır
+      </Button>
     </Paper>
   );
 };
@@ -31,6 +121,7 @@ const DraggableElement = ({
   elementLength,
   startingPoint,
   index,
+  disable,
 }) => {
   const theme = useTheme();
   const [startPoint, setStartPoint] = useState(startingPoint);
@@ -44,7 +135,8 @@ const DraggableElement = ({
   const [animateLocation, setAnimateLocation] = useState({ x: 0, y: 0 });
   useEffect(() => {
     setStartPointGlobal(isHorizontal);
-  }, [isSmall]);
+    // eslint-disable-next-line
+  }, [isSmall, isHorizontal]);
 
   useEffect(() => {
     setAnimateLocation({ x: 29, y: 29 });
@@ -67,24 +159,10 @@ const DraggableElement = ({
   };
 
   const handleDragEnd = (event, info) => {
-    // Elemanın sol üst köşesinin en yakın grid noktasına kilitlenmesi için hesaplama
-    //console.log(gridPos.x+info.offset.x , gridPos.y+info.offset.y )
-    // console.log(Math.round((gridPos.x+info.offset.x)/ TILE_SIZE) * TILE_SIZE, Math.round((gridPos.y+info.offset.y)/ TILE_SIZE) * TILE_SIZE)
-    // if (warn) {
-    //   console.log("here");
-    //   setShadow({ ...shadow, isActive: false, length: elementLength });
-    //   dispatch(remove(index));
-    //   setTimeout(() => {
-    //     setGridPos({ x: 0, y: 0 });
-    //     setInArea(false);
-    //   }, 20);
-    //   return;
-    // }
     if (!inArea) {
       info.offset.x = info.offset.x + startPoint.x;
       info.offset.y = info.offset.y + startPoint.y;
     }
-    // setGridPos({ x: info.offset.x, y: info.offset.y });
     let newX = gridPos.x + Math.round(info.offset.x / TILE_SIZE) * TILE_SIZE;
     let newY = gridPos.y + Math.round(info.offset.y / TILE_SIZE) * TILE_SIZE;
 
@@ -116,11 +194,7 @@ const DraggableElement = ({
         add({ index, isHorizontal, length: elementLength, location: { x, y } })
       );
     }
-    // console.log(info.offset.x, newX, info.offset.y, newY, isInArea(newX, newY));
-    // Yeni pozisyonu ayarla
     setTimeout(() => setGridPos({ x: newX, y: newY }), 5);
-
-    // setGridPos({ x: newX, y: newY });
   };
 
   const handleDragStart = (event, info) => {
@@ -188,6 +262,7 @@ const DraggableElement = ({
   };
 
   const doubleClickHandle = (e) => {
+    if (disable) return;
     setStartPointGlobal(!isHorizontal);
     if (inArea) {
       dispatch(remove(index));
@@ -197,12 +272,8 @@ const DraggableElement = ({
           isHorizontal: !isHorizontal,
           length: elementLength,
           location: {
-            x: isHorizontal
-              ? gridPos.x / TILE_SIZE
-              : gridPos.x / TILE_SIZE + 1,
-            y: isHorizontal
-              ? gridPos.y / TILE_SIZE + 1
-              : gridPos.y / TILE_SIZE,
+            x: isHorizontal ? gridPos.x / TILE_SIZE : gridPos.x / TILE_SIZE + 1,
+            y: isHorizontal ? gridPos.y / TILE_SIZE + 1 : gridPos.y / TILE_SIZE,
           },
         },
         GRID_SIZE
@@ -218,7 +289,7 @@ const DraggableElement = ({
             location: { x: gridPos.x / TILE_SIZE, y: gridPos.y / TILE_SIZE },
           })
         );
-      else setGridPos({x:0,y:0});
+      else setGridPos({ x: 0, y: 0 });
     }
     setIsHorizontal(!isHorizontal);
     setShadow({
@@ -233,11 +304,11 @@ const DraggableElement = ({
   return (
     <motion.div
       onDoubleClick={doubleClickHandle}
-      drag
+      drag={!disable}
       onDragStart={handleDragStart}
       onDrag={handleDrag}
-      dragMomentum={false} // Sürükleme bırakıldığında kaymayı önler
-      onDragEnd={handleDragEnd} // Bırakıldığında grid'e hizala
+      dragMomentum={false}
+      onDragEnd={handleDragEnd}
       animate={animateLocation}
       transition={{ type: "spring", stiffness: 900, damping: 50 }}
       style={{
@@ -255,7 +326,7 @@ const DraggableElement = ({
 const GRID_SIZE = 8;
 const TILE_SIZE = 40;
 
-const Arena = () => {
+const Arena = ({ gameState, isUserReady }) => {
   const [shadow, setShadow] = useState({
     isActive: false,
     start: 0,
@@ -318,6 +389,7 @@ const Arena = () => {
         {/* Sürüklenebilir Eleman */}
         {ships.map((e) => (
           <DraggableElement
+            disable={!gameState.opponent || isUserReady}
             key={e.index}
             index={e.index}
             elementLength={e.length}
@@ -329,18 +401,6 @@ const Arena = () => {
             shadow={shadow}
           />
         ))}
-        {/* <DraggableElement
-          elementLength={3}
-          startingPoint={{ x: GRID_SIZE * (TILE_SIZE + 1), y: 0 }}
-          setShadow={setShadow}
-          shadow={shadow}
-        />
-        <DraggableElement
-          elementLength={4}
-          startingPoint={{ x: GRID_SIZE * (TILE_SIZE + 1), y: TILE_SIZE * 1.5 }}
-          setShadow={setShadow}
-          shadow={shadow}
-        /> */}
       </div>
     </>
   );

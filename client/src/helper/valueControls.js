@@ -12,7 +12,7 @@ export const filledSet = (filled, ship, gridSize, status = true) => {
   if (status) {
     locations.forEach((e) => {
       if (
-        filled.findIndex((f) => JSON.stringify(f) === JSON.stringify(e)) == -1
+        filled.findIndex((f) => JSON.stringify(f) === JSON.stringify(e)) === -1
       )
         filled.push(e);
     });
@@ -52,3 +52,8 @@ const getAllLocations = (ship) => {
   }
   return locations;
 };
+
+
+export const isShipsReady = (values,count)=>{
+  return values.length === count;
+}

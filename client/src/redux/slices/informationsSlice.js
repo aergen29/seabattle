@@ -11,7 +11,10 @@ const informationsSlice = createSlice({
   reducers: {
     set: (state, { payload }) => {
       state = { ...current(state) };
-      const { name, value } = payload;
+      let { name, value } = payload;
+      if(name == "room" && value.length >=6){
+        value = value.slice(0,6);
+      }
       state[name] = value;
       return state;
     },

@@ -1,10 +1,12 @@
 import { createSlice, current } from "@reduxjs/toolkit";
-import { filledSet } from "../../helper/valueControls";
+import { filledSet, isShipsReady } from "../../helper/valueControls";
 
 const initialState = {
   gridSize: 8,
+  shipCount: 5,
   values: [],
   filled: [],
+  isReady: false,
 };
 
 const locationSlice = createSlice({
@@ -24,7 +26,8 @@ const locationSlice = createSlice({
         values[ind] = { ...values[ind], location, length, isHorizontal };
       } else values.push({ index, location, length, isHorizontal });
       let filled = filledSet(state.filled, payload, state.gridSize);
-      return { ...state, values, filled };
+      let isReady = isShipsReady(values, state.shipCount);
+      return { ...state, values, filled, isReady };
     },
     remove: (state, { payload }) => {
       state = current(state);
@@ -34,8 +37,9 @@ const locationSlice = createSlice({
       values = values.filter((e) => e.index !== index);
       values = values ? values : [];
       let filled = state.filled;
-      if(ship) filled = filledSet(state.filled, ship, state.gridSize,false);
-      return { ...state, values, filled };
+      if (ship) filled = filledSet(state.filled, ship, state.gridSize, false);
+      let isReady = isShipsReady(values, state.shipCount);
+      return { ...state, values, filled, isReady };
     },
   },
 });

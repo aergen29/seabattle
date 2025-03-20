@@ -7,17 +7,32 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import ArrowBackIosOutlinedIcon from "@mui/icons-material/ArrowBackIosOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 import { set } from "../redux/slices/informationsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import {usernameControl} from "../helper/valueControls"
+import Storage from "../helper/storage";
 
 const UserPaper = ({ swipePage }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.informations);
   const theme = useTheme().palette;
+
+  useEffect(()=>{
+    const username = Storage.getUsername();
+    if(username){
+      swipePage(1);
+      dispatch(set({ name: "username", value: username }));
+    }
+  },[]);
+
+  const swpPg = e=>{
+    Storage.setUsername(state.username);
+    swipePage(1);
+  }
+
   return (
     <Paper
       sx={{
@@ -57,7 +72,7 @@ const UserPaper = ({ swipePage }) => {
         >
           <IconButton
             sx={{ width: "50%", aspectRatio: "1/1" }}
-            onClick={() => swipePage(1)}
+            onClick={swpPg}
             color="primary"
             disabled={!usernameControl(state.username)}
           >
