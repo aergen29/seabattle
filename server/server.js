@@ -36,6 +36,7 @@ const roomControl = (roomLink) => {
 const addUserInRoom = (roomLink, username) => {
   let ind = runningRooms.findIndex((e) => e.room == roomLink);
   if (ind == -1) throw new Error("Room not founded!!");
+  if(runningRooms[ind].userTwo) throw new Error("2den fazla oyuncu olamaz.");
   runningRooms[ind].userTwo = username;
   return runningRooms[ind];
 };
@@ -91,10 +92,10 @@ io.on("connection", (socket) => {
   socket.on("joinRoom", ({ roomLink, username }, callback) => {
     callback = typeof callback == "function" ? callback : () => {};
     try {
-      let room = addUserInRoom(roomLink, username);
       socket.join(roomLink);
       socket.username = username;
       socket.room = roomLink;
+      let room = addUserInRoom(roomLink, username);
       socket.join(roomLink);
       io.to(roomLink).emit("opponent", {
         usernames: [room.userOne, room.userTwo],
