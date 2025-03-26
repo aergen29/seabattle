@@ -23,7 +23,7 @@ const createRoom = (username) => {
     do {
       roomLink = crypto.randomBytes(3).toString("hex").toUpperCase();
     } while (runningRooms.findIndex((e) => e.room == roomLink) != -1);
-    runningRooms.push({ room: roomLink, userOne: username, isReady:0 });
+    runningRooms.push({ room: roomLink, userOne: username, isReady:0 ,reads:[],shipLocations:[]});
     return roomLink;
   } else {
     return runningRooms[ind].room;
@@ -52,7 +52,7 @@ const removeUserFromRoom = (roomLink, username) => {
       runningRooms.splice(ind, 1);
     } else {
       runningRooms[ind].userOne = runningRooms[ind].userTwo;
-      delete runningRooms[ind].userTwo;
+      runningRooms[ind].userTwo = "";
       if (runningRooms[ind].reads.indexOf(username) != -1) {
         runningRooms[ind].reads.splice(
           runningRooms[ind].reads.indexOf(username),
@@ -66,7 +66,7 @@ const removeUserFromRoom = (roomLink, username) => {
       // );
     }
   } else if (runningRooms[ind].userTwo == username) {
-    delete runningRooms[ind].userTwo;
+    runningRooms[ind].userTwo = "";
     if (runningRooms[ind].reads.indexOf(username) != -1) {
       runningRooms[ind].reads.splice(
         runningRooms[ind].reads.indexOf(username),
@@ -126,6 +126,9 @@ io.on("connection", (socket) => {
   socket.on("ready", ({ roomLink, status, shipLocations }, callback) => {
     callback = typeof callback == "function" ? callback : () => {};
     let ind = runningRooms.findIndex((e) => e.room == roomLink);
+    // runningRooms[ind].isReady = runningRooms[ind].isReady
+    //   ? runningRooms[ind].isReady
+    //   : 0;
     if (status) {
       if (runningRooms[ind].reads == undefined) runningRooms[ind].reads = [];
       runningRooms[ind].reads.push(socket.username);
