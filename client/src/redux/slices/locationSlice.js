@@ -41,8 +41,11 @@ const locationSlice = createSlice({
       let isReady = isShipsReady(values, state.shipCount);
       return { ...state, values, filled, isReady };
     },
+    reset:()=>{
+      return initialState;
+    }
   },
 });
 
-export const { add, remove, setGridSize } = locationSlice.actions;
+export const { add, remove, setGridSize,reset } = locationSlice.actions;
 export default locationSlice.reducer;

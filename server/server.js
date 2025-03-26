@@ -23,14 +23,12 @@ const createRoom = (username) => {
       roomLink = crypto.randomBytes(3).toString("hex").toUpperCase();
     } while (runningRooms.findIndex((e) => e.room == roomLink) != -1);
     runningRooms.push({ room: roomLink, userOne: username });
-    // console.log(runningRooms);
     return roomLink;
   } else {
     return runningRooms[ind].room;
   }
 };
 const roomControl = (roomLink) => {
-  // console.log("r", runningRooms);
   return runningRooms.findIndex((e) => e.room == roomLink);
 };
 
@@ -38,39 +36,47 @@ const addUserInRoom = (roomLink, username) => {
   let ind = runningRooms.findIndex((e) => e.room == roomLink);
   if (ind == -1) throw new Error("Room not founded!!");
   runningRooms[ind].userTwo = username;
-  // console.log(runningRooms[ind]);
   return runningRooms[ind];
 };
 
 const removeUserFromRoom = (roomLink, username) => {
   let ind = runningRooms.findIndex((e) => e.room == roomLink);
   if (ind == -1) throw new Error("The room already closed");
+  if(runningRooms[ind].isReady == 2){
+    runningRooms[ind].shipLocations = [];
+  }
   if (runningRooms[ind].userOne == username) {
     if (!runningRooms[ind].userTwo) {
       runningRooms.splice(ind, 1);
     } else {
       runningRooms[ind].userOne = runningRooms[ind].userTwo;
       delete runningRooms[ind].userTwo;
+      if (runningRooms[ind].reads.indexOf(username) != -1) {
+        runningRooms[ind].reads.splice(
+          runningRooms[ind].reads.indexOf(username),
+          1
+        );
+        runningRooms[ind].isReady -= 1;
+      }
+      // runningRooms[ind].reads.splice(
+      //   runningRooms[ind].reads.indexOf(username),
+      //   1
+      // );
     }
-    if(runningRooms[ind].reads.indexOf(username) != -1 ){
-      runningRooms[ind].reads.splice(runningRooms[ind].reads.indexOf(username),1); 
-      runningRooms[ind].isReady -= 1;
-    }
-    runningRooms[ind].reads.splice(
-      runningRooms[ind].reads.indexOf(username),
-      1
-    );
   } else if (runningRooms[ind].userTwo == username) {
     delete runningRooms[ind].userTwo;
-    if(runningRooms[ind].reads.indexOf(username) != -1 ){
-      runningRooms[ind].reads.splice(runningRooms[ind].reads.indexOf(username),1); 
+    if (runningRooms[ind].reads.indexOf(username) != -1) {
+      runningRooms[ind].reads.splice(
+        runningRooms[ind].reads.indexOf(username),
+        1
+      );
       runningRooms[ind].isReady -= 1;
     }
   } else throw new Error("User not founded");
 };
 
 io.on("connection", (socket) => {
-  // console.log(`Socket ${socket.id} bağlandı`);
+  console.log(`Socket ${socket.id} bağlandı`);
 
   socket.on("createRoom", (username, callback) => {
     callback = typeof callback == "function" ? callback : () => {};
@@ -103,18 +109,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("exitRoom", ({ roomLink, username }) => {
-    // console.log("EXIT");
     try {
       removeUserFromRoom(roomLink, username);
       io.to(roomLink).emit("userExit", { username });
     } catch (e) {}
-  });
-
-  socket.on("shooting", ({ roomLink, username, coord }) => {
-    io.to(roomLink).emit("shooted", {
-      username,
-      coord,
-    });
   });
 
   socket.on("roomControl", (roomLink, callback) => {
@@ -133,19 +131,55 @@ io.on("connection", (socket) => {
       if (runningRooms[ind].reads == undefined) runningRooms[ind].reads = [];
       runningRooms[ind].reads.push(socket.username);
       runningRooms[ind].isReady += 1;
-      runningRooms[ind].shipLocations = [...shipLocations];
+      if (!runningRooms[ind].shipLocations)
+        runningRooms[ind].shipLocations = [];
+      runningRooms[ind].shipLocations = [
+        ...runningRooms[ind].shipLocations,
+        { username: socket.username, locations: shipLocations,shooted : 0 },
+      ];
     } else {
       if (runningRooms[ind].reads == undefined) runningRooms[ind].reads = [];
-      if (runningRooms[ind].reads.indexOf(socket.username) != -1) {
+      let readIndex = runningRooms[ind].reads.indexOf(socket.username);
+      if (readIndex != -1) {
         runningRooms[ind].isReady -= 1;
-        runningRooms[ind].reads.splice(
-          runningRooms[ind].reads.indexOf(socket.username),
-          1
-        );
-        runningRooms[ind].shipLocations = [];
+        runningRooms[ind].reads.splice(readIndex, 1);
+        runningRooms[ind].shipLocations = runningRooms[
+          ind
+        ].shipLocations.filter((e) => e.username != socket.username);
       }
     }
+    runningRooms[ind].isReady = runningRooms[ind].reads.length;
     io.to(roomLink).emit("readyControl", runningRooms[ind].isReady);
+    if (runningRooms[ind].isReady == 2)
+      io.to(roomLink).emit("gameStarted", runningRooms[ind].userOne);
+    callback(runningRooms[ind].isReady == 2);
+    // io.to(roomLink).emit("readyControl", runningRooms[ind].shipLocations);
+  });
+
+  socket.on("shooting", ({ roomLink, username, coord }) => {
+    let ind = runningRooms.findIndex((e) => e.room == roomLink);
+    let opponentShipLocations = runningRooms[ind].shipLocations[
+      runningRooms[ind].shipLocations.findIndex((e) => e.username != username)
+    ];
+    opponentShipLocations.shooted = opponentShipLocations.shooted?opponentShipLocations.shooted:0;
+    let locations =opponentShipLocations.locations;
+    let index = locations.findIndex((e) => e.x == coord.x && e.y == coord.y);
+    let status = index != -1;
+    if(status)
+      opponentShipLocations.shooted +=1;
+    
+    let who = status
+      ? username
+      : runningRooms[ind].userOne != username
+      ? runningRooms[ind].userOne
+      : runningRooms[ind].userTwo;
+    io.to(roomLink).emit("shooted", {
+      username,
+      coord,
+      status,
+      who,
+      isGameOver:opponentShipLocations.locations.length === opponentShipLocations.shooted
+    });
   });
 
   socket.on("disconnect", () => {

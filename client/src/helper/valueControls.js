@@ -41,7 +41,7 @@ export const isLocationSuit = (filled, ship, gridSize) => {
 };
 
 
-const getAllLocations = (ship) => {
+export const getAllLocations = (ship) => {
   const { isHorizontal, length, location } = ship;
   let locations = [];
   locations[0] = location;

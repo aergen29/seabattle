@@ -7,9 +7,9 @@ import GamePaper from "./GamePaper";
 import socket from "../helper/socket";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import Storage  from '../helper/storage';
+import Storage from "../helper/storage";
 import { reset, set } from "../redux/slices/gameSlice";
-import {set as infoSet} from "../redux/slices/informationsSlice";
+import { set as infoSet } from "../redux/slices/informationsSlice";
 
 const ContainerGlobal = () => {
   const theme = useTheme().palette;
@@ -18,28 +18,29 @@ const ContainerGlobal = () => {
   const roomLink = useParams().room;
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const infoState = useSelector(e=>e.informations);
-  const gameState = useSelector(e=>e.game);
-  const [roomLinkReady,setRoomLinkReady] = useState(false);
+  const infoState = useSelector((e) => e.informations);
+  const gameState = useSelector((e) => e.game);
+  const [roomLinkReady, setRoomLinkReady] = useState(false);
 
-  useEffect(()=>{
-    if(gameState.isInRoom) setPage(2);
-  },[gameState])
+  useEffect(() => {
+    if (gameState.isInRoom) setPage(2);
+  }, [gameState]);
 
-  useEffect(()=>{
-    if(roomLink && !gameState.isInRoom){
-      socket.emit("roomControl",roomLink,(res)=>{
-        if(!res){
-          dispatch(reset())
+  useEffect(() => {
+    if (roomLink && !gameState.isInRoom) {
+      socket.emit("roomControl", roomLink, (res) => {
+        if (!res) {
+          dispatch(reset());
           navigate("/");
-        }else{
-          dispatch(infoSet({name:"room",value:roomLink}))
-          setRoomLinkReady(true);}
-      })
+        } else {
+          dispatch(infoSet({ name: "room", value: roomLink }));
+          setRoomLinkReady(true);
+        }
+      });
     }
-  },[roomLink]);
+  }, [roomLink]);
 
-  useEffect(()=>{
+  useEffect(() => {
     const opponentF = ({ usernames }) => {
       dispatch(
         set({
@@ -53,24 +54,28 @@ const ContainerGlobal = () => {
     return () => {
       socket.off("opponent", opponentF);
     };
-  },[infoState])
+  }, [infoState]);
 
-  useEffect(()=>{
-    if(infoState.username && page != 0 && !gameState.isInRoom){
-      socket.emit("joinRoom",{roomLink,username:infoState.username},(res)=>{
-        if(res != true){
-          dispatch(reset())
-          navigate("/");        
-        }
-        else{
-          dispatch(set({name:["room","isInRoom"],value:[roomLink,true]}));
-          setPage(2);
-        }
-      })
+  useEffect(() => {
+    if (infoState.username && page != 0 && !gameState.isInRoom && roomLink) {
+      socket.emit(
+        "joinRoom",
+        { roomLink, username: infoState.username },
+        (res) => {
+          if (res != true) {
+            dispatch(reset());
+            navigate("/");
 
+          } else {
+            dispatch(
+              set({ name: ["room", "isInRoom"], value: [roomLink, true] })
+            );
+            setPage(2);
+          }
+        }
+      );
     }
-  },[roomLinkReady,infoState,page])
-  
+  }, [roomLinkReady, infoState, page]);
 
   useEffect(() => {
     const onConnect = () => {
@@ -143,7 +148,7 @@ const ContainerGlobal = () => {
             ) : page == 1 ? (
               <RoomPaper swipePage={swipePage} />
             ) : (
-              <GamePaper />
+              <GamePaper setPage={setPage} />
             )}
           </Box>
         </motion.div>

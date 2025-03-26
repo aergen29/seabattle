@@ -35,7 +35,7 @@ const RoomPaper = ({ swipePage }) => {
 
   const joinRoomHandle = (e) => {
     dispatch(set({ name: ["room", "isInRoom"], value: [state.room, true] }));
-    navigate(state.room);
+    navigate(`/${state.room}`);
   };
 
   return (

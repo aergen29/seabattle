@@ -1,6 +1,9 @@
 import {
   alpha,
+  Box,
   Button,
+  Grid2,
+  IconButton,
   Paper,
   Typography,
   useMediaQuery,
@@ -9,13 +12,16 @@ import {
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { add, remove } from "../redux/slices/locationSlice";
+import { add, remove, reset } from "../redux/slices/locationSlice";
 import { isLocationSuit } from "../helper/valueControls";
 import socket from "../helper/socket";
-import { set } from "../redux/slices/gameSlice";
-import alertify from 'alertifyjs';
+import { set, shootReset, reset as gameReset } from "../redux/slices/gameSlice";
+import {useNavigate} from 'react-router-dom';
+import alertify from "alertifyjs";
+import GameStartedArena from "./GameStartedArena";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const GamePaper = () => {
+const GamePaper = ({setPage}) => {
   const them = useTheme();
   const theme = them.palette;
   const state = useSelector((e) => e.locations);
@@ -25,28 +31,59 @@ const GamePaper = () => {
   const [isGameStarted, seItsGameStarted] = useState(false);
   const [color, setColor] = useState(false);
   const [opponentReady, setOpponentReady] = useState(0);
-  const locationState = useSelector(e=>e.locations);
+  const infoState = useSelector((e) => e.informations);
+  const [firtUser,setFirstUser] = useState("");
+  const [isGameOver,setIsGameOver] = useState(false);
+  const navigate = useNavigate();
 
 
-  useEffect(() => {
-    setColor(opponentReady === 2 || (opponentReady === 1 && !isReady));
-    if(opponentReady == 2) seItsGameStarted(true);
-  }, [opponentReady,isGameStarted,isReady]);
+  useEffect(()=>{
+    if(opponentReady === 2) setColor(true);
+    else if(opponentReady === 1){
+      if(isReady) setColor(false);
+      else setColor(true);
+    }
+    else setColor(false);
+  },[opponentReady])
 
   useEffect(() => {
     const userExit = ({ username }) => {
       dispatch(set({ name: "opponent", value: "" }));
       setOpponentReady(opponentReady === 2 ? 1 : color ? 0 : 1);
+      setIsReady(false);
+      dispatch(reset());
+      socket.emit(
+        "ready",
+        {
+          roomLink: gameState.room,
+          status: false,
+          shipLocations: [],
+        },
+        (e) => {
+          seItsGameStarted(e);
+        }
+      );
+      setIsGameOver(false);
     };
+
     const readyControl = (e) => {
       setOpponentReady(e);
     };
+
+    const gameStarted = (username) => {
+      setFirstUser(username);
+      dispatch(shootReset());
+      seItsGameStarted(true);
+    };
+
     socket.on("userExit", userExit);
     socket.on("readyControl", readyControl);
+    socket.on("gameStarted", gameStarted);
     socket.emit("ready", { roomLink: gameState.room, status: false });
     return () => {
       socket.off("userExit", userExit);
       socket.off("readyControl", readyControl);
+      socket.off("gameStarted", gameStarted);
     };
     // eslint-disable-next-line
   }, []);
@@ -57,14 +94,20 @@ const GamePaper = () => {
 
   const readyHandle = (e) => {
     setIsReady(!isReady);
-    socket.emit(
-      "ready",
-      { roomLink: gameState.room, status: !isReady, shipLocations:locationState.filled },
-      (e) => {
-        seItsGameStarted(e);
-      }
-    );
+    socket.emit("ready", {
+      roomLink: gameState.room,
+      status: !isReady,
+      shipLocations: state.filled,
+    });
   };
+
+  const backHandle = e=>{
+    socket.emit("exitRoom",{roomLink:gameState.room,username:infoState.username});
+    dispatch(reset());
+    dispatch(gameReset());
+    navigate('/');
+    setPage(0);
+  }
 
   return (
     <Paper
@@ -78,39 +121,48 @@ const GamePaper = () => {
         flexDirection: "column",
       }}
     >
+      <Box sx={{width:'100%',display:'flex',flexDirection:"row"}} >
+      {isGameOver?<IconButton color="success" onClick={backHandle} ><ArrowBackIcon/></IconButton>:<></>}
       <Typography
         variant="subtitle"
         color={color ? "success" : "primary"}
-        sx={{ textAlign: "right", fontSize: "1.5em" }}
+        sx={{ fontSize: "1.5em", flexGrow:8, textAlign:'right' }}
         width={{ xs: "100%", md: "80%" }}
       >
         {gameState.opponent ? gameState.opponent : ""}
       </Typography>
+      </Box>
       <Typography
         variant="subtitle"
-        sx={{ textAlign: "right", fontSize: "1.2em", cursor:"pointer" }}
+        sx={{ textAlign: "right", fontSize: "1.2em", cursor: "pointer" }}
         width={{ xs: "100%", md: "80%" }}
-        onClick={e=>{
-          alertify.success('Davet linki kopyalandı.');
-          navigator.clipboard.writeText("localhost:3000/"+gameState.room);
+        onClick={(e) => {
+          alertify.success("Davet linki kopyalandı.");
+          navigator.clipboard.writeText("localhost:3000/" + gameState.room);
         }}
       >
-        {gameState.opponent ? "" : "Davet Linkini Kopyala"}        
+        {gameState.opponent ? "" : "Davet Linkini Kopyala"}
       </Typography>
 
-      <Arena gameState={gameState} isUserReady={isReady} />
-      <Button
-        onClick={readyHandle}
-        color="secondary"
-        sx={{
-          width: "50%",
-          visibility: state.isReady ? "inherit" : "hidden",
-          mt: 4,
-        }}
-        variant={!isReady ? "outlined" : "contained"}
-      >
-        Hazır
-      </Button>
+      {isGameStarted ? (
+        <GameStartedArena first={firtUser} isGameOver={isGameOver} setIsGameOver={setIsGameOver} />
+      ) : (
+        <>
+          <Arena gameState={gameState} isUserReady={isReady} />
+          <Button
+            onClick={readyHandle}
+            color="secondary"
+            sx={{
+              width: "50%",
+              visibility: state.isReady ? "inherit" : "hidden",
+              mt: 4,
+            }}
+            variant={!isReady ? "outlined" : "contained"}
+          >
+            Hazır
+          </Button>
+        </>
+      )}
     </Paper>
   );
 };
@@ -167,7 +219,6 @@ const DraggableElement = ({
     let newY = gridPos.y + Math.round(info.offset.y / TILE_SIZE) * TILE_SIZE;
 
     if (!isInArea(newX, newY) || warn) {
-      console.log("here");
       newX = 0;
       newY = 0;
       setShadow({ ...shadow, isActive: false, length: elementLength });
