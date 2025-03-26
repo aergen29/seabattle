@@ -17,7 +17,7 @@ Notice, you need client and server runs concurrently in different terminal sessi
 Make Sure to Create a .env file in client directory and add appropriate variables in order to use the app.
 
 Essential Variables 
-REACT_APP_API_URL= example: localhost:3001/api
+REACT_APP_API_URL= example: localhost:3001
 
 
 (You need to add something in .env, api url and other things)
