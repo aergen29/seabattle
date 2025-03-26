@@ -12,7 +12,7 @@ const informationsSlice = createSlice({
     set: (state, { payload }) => {
       state = { ...current(state) };
       let { name, value } = payload;
-      if(name == "room" && value.length >=6){
+      if(name === "room" && value.length >=6){
         value = value.slice(0,6);
       }
       state[name] = value;

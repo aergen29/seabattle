@@ -16,6 +16,7 @@ const io = new Server(httpServer, {
 const runningRooms = [];
 
 const createRoom = (username) => {
+  console.log(username);
   let ind = runningRooms.findIndex((e) => e.userOne == username);
   if (ind == -1) {
     let roomLink = "";

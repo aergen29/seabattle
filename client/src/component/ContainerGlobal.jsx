@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserPaper from "./UserPaper";
 import {
   Backdrop,
@@ -19,7 +19,7 @@ import { set as infoSet } from "../redux/slices/informationsSlice";
 const ContainerGlobal = () => {
   const theme = useTheme().palette;
   const [page, setPage] = useState(0);
-  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [isConnected, setIsConnected] = useState(true);
   const roomLink = useParams().room;
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -27,9 +27,6 @@ const ContainerGlobal = () => {
   const gameState = useSelector((e) => e.game);
   const [roomLinkReady, setRoomLinkReady] = useState(false);
 
-  useEffect(() => {
-    console.log(isConnected);
-  }, [isConnected]);
 
   useEffect(() => {
     if (gameState.isInRoom) setPage(2);
@@ -47,6 +44,7 @@ const ContainerGlobal = () => {
         }
       });
     }
+    // eslint-disable-next-line
   }, [roomLink]);
 
   useEffect(() => {
@@ -63,15 +61,16 @@ const ContainerGlobal = () => {
     return () => {
       socket.off("opponent", opponentF);
     };
+    // eslint-disable-next-line
   }, [infoState]);
 
   useEffect(() => {
-    if (infoState.username && page != 0 && !gameState.isInRoom && roomLink) {
+    if (infoState.username && page !== 0 && !gameState.isInRoom && roomLink) {
       socket.emit(
         "joinRoom",
         { roomLink, username: infoState.username },
         (res) => {
-          if (res != true) {
+          if (res !== true) {
             dispatch(reset());
             navigate("/");
           } else {
@@ -83,6 +82,7 @@ const ContainerGlobal = () => {
         }
       );
     }
+    // eslint-disable-next-line
   }, [roomLinkReady, infoState, page]);
 
   useEffect(() => {
@@ -169,9 +169,9 @@ const ContainerGlobal = () => {
               md: "50%",
             }}
           >
-            {page == 0 ? (
+            {page === 0 ? (
               <UserPaper swipePage={swipePage} />
-            ) : page == 1 ? (
+            ) : page === 1 ? (
               <RoomPaper swipePage={swipePage} />
             ) : (
               <GamePaper setPage={setPage} />
