@@ -40,6 +40,7 @@ const ContainerGlobal = () => {
           navigate("/");
         } else {
           dispatch(infoSet({ name: "room", value: roomLink }));
+          dispatch(set({name:"room",value:roomLink}));
           setRoomLinkReady(true);
         }
       });
