@@ -20,6 +20,8 @@ import alertify from "alertifyjs";
 import GameStartedArena from "./GameStartedArena";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+const {REACT_APP_URL} = process.env;
+
 const GamePaper = ({setPage}) => {
   const them = useTheme();
   const theme = them.palette;
@@ -137,7 +139,7 @@ const GamePaper = ({setPage}) => {
         width={{ xs: "100%", md: "80%" }}
         onClick={(e) => {
           alertify.success("Davet linki kopyalandı.");
-          navigator.clipboard.writeText("localhost:3000/" + gameState.room);
+          navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
         }}
       >
         {gameState.opponent ? "" : "Davet Linkini Kopyala"}
