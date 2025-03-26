@@ -130,7 +130,6 @@ io.on("connection", (socket) => {
     //   ? runningRooms[ind].isReady
     //   : 0;
     if (status) {
-      if (runningRooms[ind].reads == undefined) runningRooms[ind].reads = [];
       runningRooms[ind].reads.push(socket.username);
       runningRooms[ind].isReady += 1;
       if (!runningRooms[ind].shipLocations)
@@ -140,7 +139,6 @@ io.on("connection", (socket) => {
         { username: socket.username, locations: shipLocations,shooted : 0 },
       ];
     } else {
-      if (runningRooms[ind].reads == undefined) runningRooms[ind].reads = [];
       let readIndex = runningRooms[ind].reads.indexOf(socket.username);
       if (readIndex != -1) {
         runningRooms[ind].isReady -= 1;
