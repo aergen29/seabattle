@@ -26,7 +26,7 @@ const ContainerGlobal = () => {
   const infoState = useSelector((e) => e.informations);
   const gameState = useSelector((e) => e.game);
   const [roomLinkReady, setRoomLinkReady] = useState(false);
-
+  const [isEmitted,setIsEmitted] = useState(false);
 
   useEffect(() => {
     if (gameState.isInRoom) setPage(2);
@@ -40,7 +40,6 @@ const ContainerGlobal = () => {
           navigate("/");
         } else {
           dispatch(infoSet({ name: "room", value: roomLink }));
-          dispatch(set({name:"room",value:roomLink}));
           setRoomLinkReady(true);
         }
       });
@@ -66,7 +65,9 @@ const ContainerGlobal = () => {
   }, [infoState]);
 
   useEffect(() => {
-    if (infoState.username && page !== 0 && !gameState.isInRoom && roomLink) {
+    if(gameState.isInRoom) return;
+    if (infoState.username && page !== 0 && !gameState.isInRoom && roomLink && !isEmitted) {
+      setIsEmitted(true);
       socket.emit(
         "joinRoom",
         { roomLink, username: infoState.username },
@@ -80,11 +81,12 @@ const ContainerGlobal = () => {
             );
             setPage(2);
           }
+          setIsEmitted(false);
         }
       );
     }
     // eslint-disable-next-line
-  }, [roomLinkReady, infoState, page]);
+  }, [roomLinkReady, infoState, page,isEmitted]);
 
   useEffect(() => {
     const onConnect = () => {

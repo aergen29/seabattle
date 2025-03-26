@@ -22,6 +22,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const {REACT_APP_URL} = process.env;
 
+
+
 const GamePaper = ({setPage}) => {
   const them = useTheme();
   const theme = them.palette;
