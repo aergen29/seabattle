@@ -26,6 +26,7 @@ const UserPaper = ({ swipePage }) => {
       swipePage(1);
       dispatch(set({ name: "username", value: username }));
     }
+    // eslint-disable-next-line
   },[]);
 
   const swpPg = e=>{

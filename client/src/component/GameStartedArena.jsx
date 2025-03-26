@@ -25,7 +25,7 @@ const GameStartedArena = ({ first, isGameOver, setIsGameOver }) => {
       dispatch(
         shoot({ ...coord, who: username !== infoState.username, status })
       );
-      setIsTurnMe(who == infoState.username);
+      setIsTurnMe(who === infoState.username);
       if (isGameOver) {
         setIsGameOver(true);
         alertify.success(`Oyun bitti ${username} kazandı`);
@@ -35,6 +35,7 @@ const GameStartedArena = ({ first, isGameOver, setIsGameOver }) => {
     return () => {
       socket.off("shooted", shooted);
     };
+    // eslint-disable-next-line
   }, []);
 
   const gridOnClick = (coord) => {
@@ -95,6 +96,7 @@ const MyArea = ({ gameState,infoState }) => {
       loc = loc.concat(xyToIndex(getAllLocations(l)));
     }
     setLocations(Array.from(new Set([...loc])));
+    // eslint-disable-next-line
   }, []);
 
   return (

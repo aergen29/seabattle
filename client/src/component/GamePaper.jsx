@@ -2,7 +2,6 @@ import {
   alpha,
   Box,
   Button,
-  Grid2,
   IconButton,
   Paper,
   Typography,
@@ -44,7 +43,7 @@ const GamePaper = ({setPage}) => {
       else setColor(true);
     }
     else setColor(false);
-  },[opponentReady])
+  },[opponentReady,isReady])
 
   useEffect(() => {
     const userExit = ({ username }) => {

@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import UserPaper from "./UserPaper";
-import { Box, Container, useTheme } from "@mui/material";
+import {
+  Backdrop,
+  Box,
+  CircularProgress,
+  Container,
+  useTheme,
+} from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import RoomPaper from "./RoomPaper";
 import GamePaper from "./GamePaper";
 import socket from "../helper/socket";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import Storage from "../helper/storage";
 import { reset, set } from "../redux/slices/gameSlice";
 import { set as infoSet } from "../redux/slices/informationsSlice";
 
@@ -21,6 +26,10 @@ const ContainerGlobal = () => {
   const infoState = useSelector((e) => e.informations);
   const gameState = useSelector((e) => e.game);
   const [roomLinkReady, setRoomLinkReady] = useState(false);
+
+  useEffect(() => {
+    console.log(isConnected);
+  }, [isConnected]);
 
   useEffect(() => {
     if (gameState.isInRoom) setPage(2);
@@ -65,7 +74,6 @@ const ContainerGlobal = () => {
           if (res != true) {
             dispatch(reset());
             navigate("/");
-
           } else {
             dispatch(
               set({ name: ["room", "isInRoom"], value: [roomLink, true] })
@@ -81,9 +89,21 @@ const ContainerGlobal = () => {
     const onConnect = () => {
       setIsConnected(true);
     };
+    const onDisconnect = () => {
+      setIsConnected(false);
+    };
+    const updateOnlineStatus = () => {
+      setIsConnected(navigator.onLine);
+    };
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
     socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
     return () => {
       socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
     };
   }, []);
 
@@ -120,6 +140,12 @@ const ContainerGlobal = () => {
         overflow: "clip",
       }}
     >
+      <Backdrop
+        sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
+        open={!isConnected}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <AnimatePresence custom={page} mode="wait">
         <motion.div
           key={page}

@@ -106,6 +106,7 @@ const RoomLinkBar = ({ state, dispatch, setIsRoomValidated }) => {
 
   useEffect(() => {
     sendSearchCommit();
+    // eslint-disable-next-line
   }, [infoState]);
 
   const roomInputHandler = (e) => {
