@@ -15,16 +15,12 @@ import { add, remove, reset } from "../redux/slices/locationSlice";
 import { isLocationSuit } from "../helper/valueControls";
 import socket from "../helper/socket";
 import { set, shootReset, reset as gameReset } from "../redux/slices/gameSlice";
-import {useNavigate} from 'react-router-dom';
-import alertify from "alertifyjs";
+import { useNavigate } from "react-router-dom";
 import GameStartedArena from "./GameStartedArena";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-const {REACT_APP_URL} = process.env;
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 
-
-const GamePaper = ({setPage}) => {
+const GamePaper = ({ setPage }) => {
   const them = useTheme();
   const theme = them.palette;
   const state = useSelector((e) => e.locations);
@@ -35,19 +31,17 @@ const GamePaper = ({setPage}) => {
   const [color, setColor] = useState(false);
   const [opponentReady, setOpponentReady] = useState(0);
   const infoState = useSelector((e) => e.informations);
-  const [firtUser,setFirstUser] = useState("");
-  const [isGameOver,setIsGameOver] = useState(false);
+  const [firtUser, setFirstUser] = useState("");
+  const [isGameOver, setIsGameOver] = useState(false);
   const navigate = useNavigate();
 
-
-  useEffect(()=>{
-    if(opponentReady === 2) setColor(true);
-    else if(opponentReady === 1){
-      if(isReady) setColor(false);
+  useEffect(() => {
+    if (opponentReady === 2) setColor(true);
+    else if (opponentReady === 1) {
+      if (isReady) setColor(false);
       else setColor(true);
-    }
-    else setColor(false);
-  },[opponentReady,isReady])
+    } else setColor(false);
+  }, [opponentReady, isReady]);
 
   useEffect(() => {
     const userExit = ({ username }) => {
@@ -104,13 +98,16 @@ const GamePaper = ({setPage}) => {
     });
   };
 
-  const backHandle = e=>{
-    socket.emit("exitRoom",{roomLink:gameState.room,username:infoState.username});
+  const backHandle = (e) => {
+    socket.emit("exitRoom", {
+      roomLink: gameState.room,
+      username: infoState.username,
+    });
     dispatch(reset());
     dispatch(gameReset());
-    navigate('/');
+    navigate("/");
     setPage(0);
-  }
+  };
 
   return (
     <Paper
@@ -122,33 +119,70 @@ const GamePaper = ({setPage}) => {
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "column",
+        height:{
+          xs:"90vh",
+          md:"auto"
+        }
       }}
+      id="asd"
     >
-      <Box sx={{width:'100%',display:'flex',flexDirection:"row"}} >
-      {isGameOver?<IconButton color="success" onClick={backHandle} ><ArrowBackIcon/></IconButton>:<></>}
-      <Typography
-        variant="subtitle"
-        color={color ? "success" : "primary"}
-        sx={{ fontSize: "1.5em", flexGrow:8, textAlign:'right' }}
-        width={{ xs: "100%", md: "80%" }}
-      >
-        {gameState.opponent ? gameState.opponent : ""}
-      </Typography>
-      </Box>
-      <Typography
-        variant="subtitle"
-        sx={{ textAlign: "right", fontSize: "1.2em", cursor: "pointer" }}
-        width={{ xs: "100%", md: "80%" }}
-        onClick={(e) => {
-          alertify.success("Davet linki kopyalandı.");
-          navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
+      <Box
+        sx={{
+          width: "100%",
+          display: {
+            xs: "none",
+            md: "block",
+          },
         }}
       >
-        {gameState.opponent ? "" : "Davet Linkini Kopyala"}
-      </Typography>
+        <Typography variant="h4" textAlign={"right"}>
+        {!gameState.opponent?gameState.room:""}
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          width: "100%",
+          display: {
+            xs: "none",
+            md: "flex",
+          },
+          flexDirection: "row",
+        }}
+      >
+        {isGameOver ? (
+          <IconButton color="success" onClick={backHandle}>
+            <ArrowBackIcon />
+          </IconButton>
+        ) : (
+          <></>
+        )}
+        <Typography
+          variant="subtitle"
+          color={color ? "success" : "primary"}
+          sx={{ fontSize: "1.5em", flexGrow: 8, textAlign: "right" }}
+          width={{ xs: "100%", md: "80%" }}
+        >
+          {gameState.opponent ? gameState.opponent : "Davet Linkini Kopyala"}
+        </Typography>
+        {/* <Typography
+          variant="subtitle"
+          sx={{ textAlign: "right", fontSize: "1.2em", cursor: "pointer" }}
+          width={{ xs: "100%", md: "80%" }}
+          onClick={(e) => {
+            alertify.success("Davet linki kopyalandı.");
+            navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
+          }}
+        >
+          {gameState.opponent ? "" : "Davet Linkini Kopyala"}
+        </Typography> */}
+      </Box>
 
       {isGameStarted ? (
-        <GameStartedArena first={firtUser} isGameOver={isGameOver} setIsGameOver={setIsGameOver} />
+        <GameStartedArena
+          first={firtUser}
+          isGameOver={isGameOver}
+          setIsGameOver={setIsGameOver}
+        />
       ) : (
         <>
           <Arena gameState={gameState} isUserReady={isReady} />
@@ -166,6 +200,57 @@ const GamePaper = ({setPage}) => {
           </Button>
         </>
       )}
+      <Box
+        sx={{
+          width: "100%",
+          display: {
+            xs: "block",
+            md: "none",
+          },
+
+        }}
+      >
+        <Typography variant="h4" textAlign={"right"}>
+          {!gameState.opponent?gameState.room:""}
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          width: "100%",
+          display: {
+            xs: "flex",
+            md: "none",
+          },
+          flexDirection: "row",
+        }}
+      >
+        {isGameOver ? (
+          <IconButton color="success" onClick={backHandle}>
+            <ArrowBackIcon />
+          </IconButton>
+        ) : (
+          <></>
+        )}
+        <Typography
+          variant="subtitle"
+          color={color ? "success" : "primary"}
+          sx={{ fontSize: "1.5em", flexGrow: 8, textAlign: "right" }}
+          width={{ xs: "100%", md: "80%" }}
+        >
+          {gameState.opponent ? gameState.opponent : "Davet Linkini Kopyala"}
+        </Typography>
+        {/* <Typography
+          variant="subtitle"
+          sx={{ textAlign: "right", fontSize: "1.2em", cursor: "pointer" }}
+          width={{ xs: "100%", md: "80%" }}
+          onClick={(e) => {
+            alertify.success("Davet linki kopyalandı.");
+            navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
+          }}
+        >
+          {gameState.opponent ? "" : "Davet Linkini Kopyala"}
+        </Typography> */}
+      </Box>
     </Paper>
   );
 };

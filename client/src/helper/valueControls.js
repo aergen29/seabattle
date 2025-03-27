@@ -57,3 +57,11 @@ export const getAllLocations = (ship) => {
 export const isShipsReady = (values,count)=>{
   return values.length === count;
 }
+
+export const strToBoolean = (e)=>{
+  return e==="true";
+}
+
+export const booleanToStr = e=>{
+  return e?"true":"false";
+}
