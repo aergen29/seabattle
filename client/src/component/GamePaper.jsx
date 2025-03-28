@@ -2,6 +2,7 @@ import {
   alpha,
   Box,
   Button,
+  Grid2,
   IconButton,
   Paper,
   Typography,
@@ -18,7 +19,10 @@ import { set, shootReset, reset as gameReset } from "../redux/slices/gameSlice";
 import { useNavigate } from "react-router-dom";
 import GameStartedArena from "./GameStartedArena";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import alertify from "alertifyjs";
+import ShareIcon from '@mui/icons-material/Share';
 
+const { REACT_APP_URL } = process.env;
 
 const GamePaper = ({ setPage }) => {
   const them = useTheme();
@@ -119,12 +123,11 @@ const GamePaper = ({ setPage }) => {
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "column",
-        height:{
-          xs:"90vh",
-          md:"auto"
-        }
+        height: {
+          xs: "90vh",
+          md: "auto",
+        },
       }}
-      id="asd"
     >
       <Box
         sx={{
@@ -136,7 +139,7 @@ const GamePaper = ({ setPage }) => {
         }}
       >
         <Typography variant="h4" textAlign={"right"}>
-        {!gameState.opponent?gameState.room:""}
+          {!gameState.opponent ? gameState.room : ""}
         </Typography>
       </Box>
       <Box
@@ -161,14 +164,14 @@ const GamePaper = ({ setPage }) => {
           color={color ? "success" : "primary"}
           sx={{ fontSize: "1.5em", flexGrow: 8, textAlign: "right" }}
           width={{ xs: "100%", md: "80%" }}
-          onClick={e=>{
-            if(!gameState.opponent){
+          onClick={(e) => {
+            if (!gameState.opponent) {
               alertify.success("Davet linki kopyalandı.");
               navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
             }
           }}
         >
-          {gameState.opponent ? gameState.opponent : "Davet Linkini Kopyala"}
+          {gameState.opponent ? gameState.opponent : <IconButton color="primary"><ShareIcon/></IconButton>}
         </Typography>
         {/* <Typography
           variant="subtitle"
@@ -213,11 +216,10 @@ const GamePaper = ({ setPage }) => {
             xs: "block",
             md: "none",
           },
-
         }}
       >
         <Typography variant="h4" textAlign={"right"}>
-          {!gameState.opponent?gameState.room:""}
+          {!gameState.opponent ? gameState.room : ""}
         </Typography>
       </Box>
       <Box
@@ -240,10 +242,16 @@ const GamePaper = ({ setPage }) => {
         <Typography
           variant="subtitle"
           color={color ? "success" : "primary"}
-          sx={{ fontSize: "1.5em", flexGrow: 8, textAlign: "right" }}
+          sx={{ fontSize: "1.2em", flexGrow: 8, textAlign: "right" }}
           width={{ xs: "100%", md: "80%" }}
+          onClick={(e) => {
+            if (!gameState.opponent) {
+              alertify.success("Davet linki kopyalandı.");
+              navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
+            }
+          }}
         >
-          {gameState.opponent ? gameState.opponent : "Davet Linkini Kopyala"}
+          {gameState.opponent ? gameState.opponent :  <IconButton color="primary"><ShareIcon/></IconButton>}
         </Typography>
         {/* <Typography
           variant="subtitle"
@@ -488,8 +496,8 @@ const Arena = ({ gameState, isUserReady }) => {
   ];
   return (
     <>
-      <div
-        style={{
+      <Grid2
+        sx={{
           width: GRID_SIZE * TILE_SIZE,
           height: GRID_SIZE * TILE_SIZE,
           display: "grid",
@@ -497,34 +505,36 @@ const Arena = ({ gameState, isUserReady }) => {
           gridTemplateRows: `repeat(${GRID_SIZE}, ${TILE_SIZE}px)`,
           position: "relative",
           backgroundColor: "#ddd",
-          border: "4px solid black",
+          border: "4px solid ",
+          borderColor:"background.main"
         }}
       >
         {/* Grid Çizgilerini Göster */}
         {[...Array(GRID_SIZE * GRID_SIZE)].map((_, index) => (
-          <div
+          <Grid2
             key={index}
-            style={{
+            sx={{
               width: TILE_SIZE,
               height: TILE_SIZE,
-              border: "1px solid black",
+              border: "1px solid ",
+              borderColor : "background.gridBorder",
               boxSizing: "border-box",
-              backgroundColor: shadow.isActive
+              bgcolor: shadow.isActive
                 ? shadow.isHorizontal
                   ? shadow.start + shadow.length - 1 >= index &&
                     shadow.start <= index
                     ? shadow.warn
                       ? "darkred"
                       : "gray"
-                    : "white"
+                    : "background.grid"
                   : [...Array(shadow.length)]
                       .map((_, i) => shadow.start + i * GRID_SIZE)
                       .indexOf(index) !== -1
                   ? shadow.warn
                     ? "darkred"
                     : "gray"
-                  : "white"
-                : "white",
+                  : "background.grid"
+                : "background.grid",
 
               transition: "all 0.1s",
             }}
@@ -546,7 +556,7 @@ const Arena = ({ gameState, isUserReady }) => {
             shadow={shadow}
           />
         ))}
-      </div>
+      </Grid2>
     </>
   );
 };

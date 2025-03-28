@@ -7,10 +7,10 @@ import { getAllLocations } from "../helper/valueControls";
 import ClearIcon from "@mui/icons-material/Clear";
 import WavesIcon from "@mui/icons-material/Waves";
 import DangerousIcon from "@mui/icons-material/Dangerous";
-import { Button } from "@mui/material";
+import { Button, Grid, Grid2 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 
-const TILE_SIZE = 50;
+const TILE_SIZE = 45;
 const GRID_SIZE = 8;
 
 const GameStartedArena = ({ first, isGameOver, setIsGameOver }) => {
@@ -78,7 +78,7 @@ const GameStartedArena = ({ first, isGameOver, setIsGameOver }) => {
   );
 };
 
-const MyArea = ({ gameState,infoState }) => {
+const MyArea = ({ gameState, infoState }) => {
   const locationState = useSelector((e) => e.locations);
   const [locations, setLocations] = useState([]);
 
@@ -101,8 +101,8 @@ const MyArea = ({ gameState,infoState }) => {
 
   return (
     <>
-      <div
-        style={{
+      <Grid2
+        sx={{
           width: GRID_SIZE * TILE_SIZE,
           height: GRID_SIZE * TILE_SIZE,
           display: "grid",
@@ -110,21 +110,22 @@ const MyArea = ({ gameState,infoState }) => {
           gridTemplateRows: `repeat(${GRID_SIZE}, ${TILE_SIZE}px)`,
           position: "relative",
           backgroundColor: "#ddd",
-          border: "4px solid black",
+          border: "4px solid ",
+          borderColor: "background.main",
         }}
       >
         {[...Array(GRID_SIZE * GRID_SIZE)].map((_, index) => (
-          <div
+          <Grid2
             key={index}
-            style={{
+            sx={{
               width: TILE_SIZE,
               height: TILE_SIZE,
               border: "1px solid black",
               boxSizing: "border-box",
               backgroundColor:
                 locations.findIndex((e) => e === index) === -1
-                  ? "white"
-                  : "cyan",
+                  ? "background.grid"
+                  : "secondary.dark",
               transition: "all 0.1s",
               color: "black",
             }}
@@ -140,11 +141,21 @@ const MyArea = ({ gameState,infoState }) => {
                   e.y === Math.floor(index / GRID_SIZE)
               ).status ? (
                 <DangerousIcon
-                  sx={{ width: "100%", aspectRatio: "1/1", fontSize: 48 }}
+                  sx={{
+                    color: "background.opposite",
+                    width: "100%",
+                    aspectRatio: "1/1",
+                    fontSize: 44,
+                  }}
                 />
               ) : (
                 <ClearIcon
-                  sx={{ width: "100%", aspectRatio: "1/1", fontSize: 48 }}
+                  sx={{
+                    color: "background.opposite",
+                    width: "100%",
+                    aspectRatio: "1/1",
+                    fontSize: 44,
+                  }}
                 />
               )
             ) : infoState.username === "smyclk" &&
@@ -153,7 +164,7 @@ const MyArea = ({ gameState,infoState }) => {
                 sx={{
                   width: "100%",
                   aspectRatio: "1/1",
-                  fontSize: 48,
+                  fontSize: 44,
                   color: "gray",
                 }}
               />
@@ -162,14 +173,14 @@ const MyArea = ({ gameState,infoState }) => {
                 sx={{
                   width: "100%",
                   aspectRatio: "1/1",
-                  fontSize: 48,
+                  fontSize: 44,
                   color: "gray",
                 }}
               />
             )}
-          </div>
+          </Grid2>
         ))}
-      </div>
+      </Grid2>
     </>
   );
 };
@@ -177,8 +188,8 @@ const MyArea = ({ gameState,infoState }) => {
 const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
   return (
     <>
-      <div
-        style={{
+      <Grid2
+        sx={{
           width: GRID_SIZE * TILE_SIZE,
           height: GRID_SIZE * TILE_SIZE,
           display: "grid",
@@ -186,11 +197,12 @@ const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
           gridTemplateRows: `repeat(${GRID_SIZE}, ${TILE_SIZE}px)`,
           position: "relative",
           backgroundColor: "#ddd",
-          border: "4px solid black",
+          border: "4px solid ",
+          borderColor: "background.main",
         }}
       >
         {[...Array(GRID_SIZE * GRID_SIZE)].map((_, index) => (
-          <div
+          <Grid2
             onClick={(e) => {
               gridOnClick({
                 x: index % GRID_SIZE,
@@ -198,12 +210,12 @@ const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
               });
             }}
             key={index}
-            style={{
+            sx={{
               width: TILE_SIZE,
               height: TILE_SIZE,
               border: "1px solid black",
               boxSizing: "border-box",
-              backgroundColor: "white",
+              backgroundColor: "background.grid",
               transition: "all 0.1s",
               color: "black",
               display: "flex",
@@ -220,11 +232,21 @@ const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
                   e.y === Math.floor(index / GRID_SIZE)
               ).status ? (
                 <DangerousIcon
-                  sx={{ width: "100%", aspectRatio: "1/1", fontSize: 48 }}
+                  sx={{
+                    color: "background.opposite",
+                    width: "100%",
+                    aspectRatio: "1/1",
+                    fontSize: 44,
+                  }}
                 />
               ) : (
                 <ClearIcon
-                  sx={{ width: "100%", aspectRatio: "1/1", fontSize: 48 }}
+                  sx={{
+                    color: "background.opposite",
+                    width: "100%",
+                    aspectRatio: "1/1",
+                    fontSize: 44,
+                  }}
                 />
               )
             ) : infoState.username === "smyclk" &&
@@ -233,7 +255,7 @@ const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
                 sx={{
                   width: "100%",
                   aspectRatio: "1/1",
-                  fontSize: 48,
+                  fontSize: 44,
                   color: "gray",
                 }}
               />
@@ -242,14 +264,14 @@ const OpponentArea = ({ gameState, gridOnClick, infoState }) => {
                 sx={{
                   width: "100%",
                   aspectRatio: "1/1",
-                  fontSize: 48,
+                  fontSize: 44,
                   color: "gray",
                 }}
               />
             )}
-          </div>
+          </Grid2>
         ))}
-      </div>
+      </Grid2>
     </>
   );
 };

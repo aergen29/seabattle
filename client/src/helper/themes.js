@@ -7,6 +7,9 @@ export const darkTheme = createTheme({
     background: {
       card: "#0F1215",
       main: "#000",
+      grid:"#1e1e1e",
+      gridBorder:"#959595",
+      opposite:"gray"
     },
     primary: {
       dark: "#7c0b20",
@@ -67,6 +70,9 @@ export const lightTheme = createTheme({
     background: {
       main: "#f8fbff",
       card: "#fff",
+      grid:"#dfdfdf",
+      gridBorder:"1e1e1e",
+      opposite: "#000"
     },
     primary: {
       dark: "#7c0b20",
