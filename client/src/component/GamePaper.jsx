@@ -161,6 +161,12 @@ const GamePaper = ({ setPage }) => {
           color={color ? "success" : "primary"}
           sx={{ fontSize: "1.5em", flexGrow: 8, textAlign: "right" }}
           width={{ xs: "100%", md: "80%" }}
+          onClick={e=>{
+            if(!gameState.opponent){
+              alertify.success("Davet linki kopyalandı.");
+              navigator.clipboard.writeText(REACT_APP_URL + gameState.room);
+            }
+          }}
         >
           {gameState.opponent ? gameState.opponent : "Davet Linkini Kopyala"}
         </Typography>
