@@ -152,13 +152,11 @@ const GamePaper = ({ setPage }) => {
           flexDirection: "row",
         }}
       >
-        {isGameOver ? (
+        
           <IconButton color="success" onClick={backHandle}>
             <ArrowBackIcon />
           </IconButton>
-        ) : (
-          <></>
-        )}
+        
         <Typography
           variant="subtitle"
           color={color ? "success" : "primary"}
@@ -232,13 +230,10 @@ const GamePaper = ({ setPage }) => {
           flexDirection: "row",
         }}
       >
-        {isGameOver ? (
           <IconButton color="success" onClick={backHandle}>
             <ArrowBackIcon />
           </IconButton>
-        ) : (
-          <></>
-        )}
+          
         <Typography
           variant="subtitle"
           color={color ? "success" : "primary"}

@@ -22,7 +22,13 @@ const createRoom = (username) => {
     do {
       roomLink = crypto.randomBytes(3).toString("hex").toUpperCase();
     } while (runningRooms.findIndex((e) => e.room == roomLink) != -1);
-    runningRooms.push({ room: roomLink, userOne: username, isReady:0 ,reads:[],shipLocations:[]});
+    runningRooms.push({
+      room: roomLink,
+      userOne: username,
+      isReady: 0,
+      reads: [],
+      shipLocations: [],
+    });
     return roomLink;
   } else {
     return runningRooms[ind].room;
@@ -35,7 +41,7 @@ const roomControl = (roomLink) => {
 const addUserInRoom = (roomLink, username) => {
   let ind = runningRooms.findIndex((e) => e.room == roomLink);
   if (ind == -1) throw new Error("Room not founded!!");
-  if(runningRooms[ind].userTwo) throw new Error("2den fazla oyuncu olamaz.");
+  if (runningRooms[ind].userTwo) throw new Error("2den fazla oyuncu olamaz.");
   runningRooms[ind].userTwo = username;
   return runningRooms[ind];
 };
@@ -43,7 +49,7 @@ const addUserInRoom = (roomLink, username) => {
 const removeUserFromRoom = (roomLink, username) => {
   let ind = runningRooms.findIndex((e) => e.room == roomLink);
   if (ind == -1) throw new Error("The room already closed");
-  if(runningRooms[ind].isReady == 2){
+  if (runningRooms[ind].isReady == 2) {
     runningRooms[ind].shipLocations = [];
   }
   if (runningRooms[ind].userOne == username) {
@@ -119,7 +125,13 @@ io.on("connection", (socket) => {
   socket.on("roomControl", (roomLink, callback) => {
     callback = typeof callback == "function" ? callback : () => {};
     let ind = roomControl(roomLink);
-    callback(ind != -1);
+    if (ind == -1) {
+      callback("Oda Bulunamadı!");
+      return;
+    } else {
+      if (runningRooms[ind].userOne && runningRooms.userTwo) callback("Oda dolu!");
+      else callback(true);
+    }
   });
 
   socket.on("ready", ({ roomLink, status, shipLocations }, callback) => {
@@ -128,6 +140,7 @@ io.on("connection", (socket) => {
     // runningRooms[ind].isReady = runningRooms[ind].isReady
     //   ? runningRooms[ind].isReady
     //   : 0;
+    if(ind == -1) return;
     if (status) {
       runningRooms[ind].reads.push(socket.username);
       runningRooms[ind].isReady += 1;
@@ -135,7 +148,7 @@ io.on("connection", (socket) => {
         runningRooms[ind].shipLocations = [];
       runningRooms[ind].shipLocations = [
         ...runningRooms[ind].shipLocations,
-        { username: socket.username, locations: shipLocations,shooted : 0 },
+        { username: socket.username, locations: shipLocations, shooted: 0 },
       ];
     } else {
       let readIndex = runningRooms[ind].reads.indexOf(socket.username);
@@ -157,16 +170,18 @@ io.on("connection", (socket) => {
 
   socket.on("shooting", ({ roomLink, username, coord }) => {
     let ind = runningRooms.findIndex((e) => e.room == roomLink);
-    let opponentShipLocations = runningRooms[ind].shipLocations[
-      runningRooms[ind].shipLocations.findIndex((e) => e.username != username)
-    ];
-    opponentShipLocations.shooted = opponentShipLocations.shooted?opponentShipLocations.shooted:0;
-    let locations =opponentShipLocations.locations;
+    let opponentShipLocations =
+      runningRooms[ind].shipLocations[
+        runningRooms[ind].shipLocations.findIndex((e) => e.username != username)
+      ];
+    opponentShipLocations.shooted = opponentShipLocations.shooted
+      ? opponentShipLocations.shooted
+      : 0;
+    let locations = opponentShipLocations.locations;
     let index = locations.findIndex((e) => e.x == coord.x && e.y == coord.y);
     let status = index != -1;
-    if(status)
-      opponentShipLocations.shooted +=1;
-    
+    if (status) opponentShipLocations.shooted += 1;
+
     let who = status
       ? username
       : runningRooms[ind].userOne != username
@@ -177,7 +192,9 @@ io.on("connection", (socket) => {
       coord,
       status,
       who,
-      isGameOver:opponentShipLocations.locations.length === opponentShipLocations.shooted
+      isGameOver:
+        opponentShipLocations.locations.length ===
+        opponentShipLocations.shooted,
     });
   });
 

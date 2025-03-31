@@ -20,8 +20,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { reset, set } from "../redux/slices/gameSlice";
 import { set as infoSet } from "../redux/slices/informationsSlice";
 import Storage from "../helper/storage";
+import alertify from "alertifyjs";
 
-const ContainerGlobal = ({ changeDarkMode,isDarkMode }) => {
+const ContainerGlobal = ({ changeDarkMode, isDarkMode }) => {
   const theme = useTheme().palette;
   const [page, setPage] = useState(0);
   const [isConnected, setIsConnected] = useState(true);
@@ -40,7 +41,8 @@ const ContainerGlobal = ({ changeDarkMode,isDarkMode }) => {
   useEffect(() => {
     if (roomLink && !gameState.isInRoom) {
       socket.emit("roomControl", roomLink, (res) => {
-        if (!res) {
+        if (res !== true) {
+          alertify.error(res);
           dispatch(reset());
           navigate("/");
         } else {
@@ -154,9 +156,16 @@ const ContainerGlobal = ({ changeDarkMode,isDarkMode }) => {
         overflow: "clip",
       }}
     >
-      <FormGroup sx={{position:"absolute",top:20,right:20}}>
-        <FormControlLabel checked={isDarkMode} onChange={e=>changeDarkMode()}
-          control={<MaterialUISwitch sx={{ m: 1 }} defaultChecked={Storage.getMode()} />}
+      <FormGroup sx={{ position: "absolute", top: 20, right: 20 }}>
+        <FormControlLabel
+          checked={isDarkMode}
+          onChange={(e) => changeDarkMode()}
+          control={
+            <MaterialUISwitch
+              sx={{ m: 1 }}
+              defaultChecked={Storage.getMode()}
+            />
+          }
         />
       </FormGroup>
       <Backdrop
@@ -186,7 +195,7 @@ const ContainerGlobal = ({ changeDarkMode,isDarkMode }) => {
               xs: "100%",
               sm: "90%",
               md: "80%",
-              lg:"50%"
+              lg: "50%",
             }}
           >
             {page === 0 ? (
