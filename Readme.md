@@ -1,10 +1,6 @@
 <h1 align="center">
 SEABATTLE GAME
 </h1>
-<p align="center">
-MERN Stack
-</p>
-
 
 ## Usage 
 
@@ -18,6 +14,7 @@ Make Sure to Create a .env file in client directory and add appropriate variable
 
 Essential Variables 
 REACT_APP_API_URL= example: localhost:3001
+REACT_APP_URL = example: localhost:/3000/
 
 
 (You need to add something in .env, api url and other things)
@@ -31,16 +28,6 @@ $ npm run start // this will run the files in docs, this behavior is exactly the
 ```
 
 ## Server-side usage
-
-### Prepare your secret
-
-(You need to add something in .env to connect to MongoDB and other things)
-
-### Env Variables
-Make Sure to Create a .env file in server directory and add appropriate variables in order to use the app.
-
-Essential Variables 
-PORT=
 
 
 ### Start
@@ -60,3 +47,7 @@ Email Me: abdullahergeni@yandex.com
 
 ## Author
 [29apo29](https://twitter.com/29apo29)
+
+## Demo
+[Demo](https://seabattle-teal.vercel.app)
+
